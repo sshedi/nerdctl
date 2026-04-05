@@ -365,7 +365,7 @@ Logging flags:
     - The `fluentd` logging driver supports the following logging options:
       - :whale: `--log-opt=fluentd-address=<ADDRESS>`: The address of the `fluentd` daemon, tcp(default) and unix sockets are supported..
       - :whale: `--log-opt=fluentd-async=<true|false>`: Enable async mode for fluentd. The default value is false.
-      - :whale: `--log-opt=fluentd-buffer-limit=<LIMIT>`: The buffer limit for fluentd. If the buffer is full, the call to record logs will fail. The default is 8192. (<https://github.com/fluent/fluent-logger-golang/tree/master#bufferlimit>)
+      - :whale: `--log-opt=fluentd-buffer-limit=<LIMIT>`: The buffer limit for fluentd. If the buffer is full, the call to record logs will fail. The default is 1MiB. Accepts human-readable sizes (e.g., `1KiB`, `1MiB`, `1GiB`) or raw byte values. (<https://github.com/fluent/fluent-logger-golang/tree/master#bufferlimit>)
       - :whale: `--log-opt=fluentd-retry-wait=<1s|1ms>`: The time to wait before retrying to send logs to fluentd. The default value is 1s.
       - :whale: `--log-opt=fluentd-max-retries=<1>`: The maximum number of retries to send logs to fluentd. The default value is MaxInt32.
       - :whale: `--log-opt=fluentd-sub-second-precision=<true|false>`: Enable sub-second precision for fluentd. The default value is false.
