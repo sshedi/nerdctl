@@ -23,6 +23,8 @@ import (
 	"testing"
 	"time"
 
+	cniutils "github.com/containernetworking/plugins/pkg/utils"
+
 	"github.com/containerd/nerdctl/mod/tigron/expect"
 	"github.com/containerd/nerdctl/mod/tigron/require"
 	"github.com/containerd/nerdctl/mod/tigron/test"
@@ -111,10 +113,15 @@ func TestContainerRmIptables(t *testing.T) {
 			Expected: func(data test.Data, helpers test.Helpers) *test.Expected {
 				// Get the container ID from the label
 				containerID := data.Labels().Get("containerID")
+				id := fmt.Sprintf("%s-%s", testutil.Namespace, containerID)
+				chain := cniutils.FormatChainName("bridge", id)
 				return &test.Expected{
 					ExitCode: expect.ExitCodeSuccess,
-					// Verify that the iptables output does not contain the container ID
-					Output: expect.DoesNotContain(containerID),
+					// Verify that the iptables output does not contain the container ID and a chain name generated from the cni name, namespace, and container ID
+					Output: expect.All(
+						expect.DoesNotContain(containerID),
+						expect.DoesNotContain(chain),
+					),
 				}
 			},
 		},
