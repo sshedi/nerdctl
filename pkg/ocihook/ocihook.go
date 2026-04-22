@@ -456,8 +456,24 @@ func reserveSocket(protocol, hostAddr string) (*os.File, error) {
 }
 
 // portReserverPidFilePath returns /run/nerdctl/<namespace>/<id>/port-reserver.pid
-func portReserverPidFilePath(opts *handlerOpts) string {
-	return filepath.Join("/run/nerdctl/", opts.state.Annotations[labels.Namespace], opts.state.ID, "port-reserver.pid")
+func portReserverPidFilePath(namespace, id string) string {
+	return filepath.Join("/run/nerdctl/", namespace, id, "port-reserver.pid")
+}
+
+func CleanupPortReserverProcess(namespace, id string) error {
+	// In rootless mode, port-reserver is handled by Rootlesskit, so no cleanup is needed.
+	if rootlessutil.IsRootlessChild() {
+		return nil
+	}
+
+	pidFile := portReserverPidFilePath(namespace, id)
+	if err := killProcessByPidFile(pidFile); err != nil {
+		return err
+	}
+	if err := os.RemoveAll(filepath.Dir(pidFile)); err != nil {
+		log.L.WithError(err).Errorf("failed to remove the port-reserver directory %s", filepath.Dir(pidFile))
+	}
+	return nil
 }
 
 func applyNetworkSettings(opts *handlerOpts) (err error) {
@@ -503,10 +519,10 @@ func applyNetworkSettings(opts *handlerOpts) (err error) {
 			if err != nil {
 				log.L.Debugf("killing the port reserver process (pid=%d)", reserverCmdPid)
 				_ = reserverCmd.Process.Kill()
-				_ = os.RemoveAll(filepath.Dir(portReserverPidFilePath(opts)))
+				_ = os.RemoveAll(filepath.Dir(portReserverPidFilePath(opts.state.Annotations[labels.Namespace], opts.state.ID)))
 			}
 		}()
-		if err := writePidFile(portReserverPidFilePath(opts), reserverCmdPid); err != nil {
+		if err := writePidFile(portReserverPidFilePath(opts.state.Annotations[labels.Namespace], opts.state.ID), reserverCmdPid); err != nil {
 			return fmt.Errorf("cannot write the pid file of the port reserver process: %w", err)
 		}
 	}
@@ -745,12 +761,8 @@ func onPostStop(opts *handlerOpts) error {
 		return fmt.Errorf("failed to release container name %s: %w", name, err)
 	}
 	// Kill port-reserver process if any
-	portReserverPidFile := portReserverPidFilePath(opts)
-	if err = killProcessByPidFile(portReserverPidFile); err != nil {
+	if err = CleanupPortReserverProcess(ns, opts.state.ID); err != nil {
 		log.L.WithError(err).Errorf("failed to kill the port-reserver process")
-	}
-	if err := os.RemoveAll(filepath.Dir(portReserverPidFile)); err != nil {
-		log.L.WithError(err).Errorf("failed to remove the port-reserver directory %s", filepath.Dir(portReserverPidFile))
 	}
 	return nil
 }
