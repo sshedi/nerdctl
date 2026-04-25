@@ -15,6 +15,10 @@ on:
         required: false
         default: false
         type: boolean
+      no-hyperv:
+        required: false
+        default: false
+        type: boolean
       binary:
         required: false
         default: nerdctl
@@ -82,6 +86,11 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           fetch-depth: 1
+
+      - if: ${{ inputs.no-hyperv }}
+        name: "Init (no-hyperv): Disable Hyper-V"
+        run: |
+          printf "NO_HYPERV=1\n" >> "$GITHUB_ENV"
 
       - if: ${{ inputs.canary }}
         name: "Init (canary): retrieve latest go and containerd"
