@@ -255,7 +255,7 @@ Security flags:
 
 - :whale: `--security-opt seccomp=<PROFILE_JSON_FILE>`: specify custom seccomp profile
 - :whale: `--security-opt apparmor=<PROFILE>`: specify custom AppArmor profile
-  :whale: `--security-opt label=<selinuxlabel>`: specify custom selinux label
+- :whale: `--security-opt label=<selinuxlabel>`: specify custom selinux label
 - :whale: `--security-opt no-new-privileges`: disallow privilege escalation, e.g., setuid and file capabilities
 - :whale: `--security-opt systempaths=unconfined`: Turn off confinement for system paths (masked paths, read-only paths) for the container
 - :whale: `--security-opt writable-cgroups`: making the cgroups writeable
